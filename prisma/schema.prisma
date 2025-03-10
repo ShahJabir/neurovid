@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PRESET {
+    SD
+    HD
+}
+
+enum Type {
+    PERSONAL
+    PUBLIC
+}
+
+enum SUBSCRIPTION_Plan {
+    FREE
+    PRO
+}
+
+model User {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clerkId String @unique
+  email String @unique
+  firstname String?
+  lastname String?
+  image String?
+  trial Boolean @default(false)
+  studio Media?
+  workspace Workspace[]
+  subscription Subscription[]
+  notification Notification[]
+  videos Video[]
+  members Member[]
+  sender Invite[] @relation("sender")
+  receiver Invite[] @relation("receiver")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    userId String? @unique @db.Uuid
+    User User? @relation(fields: [userId], references: [id])
+    plan SUBSCRIPTION_Plan @default(FREE)
+    customerId String? @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Media {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    screen String?
+    mic String?
+    camera String?
+    preset PRESET @default(SD)
+    userId String @unique @db.Uuid
+    User User @relation(fields: [userId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Workspace {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    name String
+    type Type
+    userId String @db.Uuid
+    User User @relation(fields: [userId], references: [id])
+    folder Folder[]
+    videos Video[]
+    members Member[]
+    invite Invite[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Folder {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    name String
+    workspaceId String @db.Uuid
+    Workspace Workspace @relation(fields: [workspaceId], references: [id])
+    videos Video[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Video {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    title String?  @default("Untitled Video")
+    description String? @default("No description")
+    source String @unique
+    User User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String? @db.Uuid
+    processing Boolean @default(true)
+    Workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+    workspaceId String @db.Uuid
+    views Int @default(0)
+    summery String?
+    folderId String? @db.Uuid
+    Folder Folder? @relation(fields: [folderId], references: [id] , onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Member {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    userId String? @db.Uuid
+    User User? @relation(fields: [userId], references: [id])
+    member Boolean @default(true)
+    workspaceId String? @db.Uuid
+    Workspace Workspace? @relation(fields: [workspaceId], references: [id])
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Notification {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    userId String? @db.Uuid
+    User User? @relation(fields: [userId], references: [id])
+    content String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Invite {
+    id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    senderId String @db.Uuid
+    Sender User? @relation("sender", fields: [senderId], references: [id])
+    receiverId String? @db.Uuid
+    Receiver User? @relation("receiver", fields: [receiverId], references: [id])
+    workspaceId String @db.Uuid
+    Workspace Workspace @relation(fields: [workspaceId], references: [id])
+    content String
+    accepted Boolean @default(false)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

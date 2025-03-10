@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Manrope } from 'next/font/google';
+import React from 'react';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { ClerkProvider } from '@clerk/nextjs';
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+import { ThemeProvider } from '@/components/theme';
+
+import './globals.css';
+
+const manrope = Manrope({
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "NeuroVid",
-  description: "Neuro Vid is a platform for creating and sharing videos with AI",
+  title: 'NeuroVid',
+  description: 'NeuroVid is a platform for creating and sharing videos with AI',
 };
 
 export default function RootLayout({
@@ -23,12 +23,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${manrope.className} bg-[#171717]`}>
+          <header></header>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
